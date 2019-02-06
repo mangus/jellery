@@ -46,7 +46,7 @@ defmodule Processor do
 
 	def process_files([first_file | other_files]) do
 		if File.dir?(first_file) and !String.contains?(first_file, "crap") do
-			IO.puts "Processing: " <> first_file <> " (a directory)"
+			IO.puts "Processing directory: " <> first_file
 			{:ok, files} = File.ls first_file
 			with_full_path = Enum.map(files, fn(filename) -> Path.join(first_file, filename) end)
   	  process_files with_full_path
@@ -67,11 +67,9 @@ end
 
 defmodule Keywords do
   def get_keywords(path_and_filename) do
-    IO.puts "Parsing keywords from: " <> path_and_filename
     to_keywords = String.replace(path_and_filename, ~r/\(.{0,}\)/, "") # Remove text in brackets
     to_keywords = String.trim_trailing(to_keywords, ".jpg")
     words = String.split(to_keywords, [" /", "  ", "/", " "])
-    IO.inspect words
     Enum.map words, fn word ->
       if !String.match?(word, ~r/^\d{0,}$/) do
         MemoryDatabase.add_keyword word, path_and_filename
@@ -86,6 +84,7 @@ defmodule MemoryDatabase do
   def start() do
     {:ok, pid} = Agent.start_link(fn -> %{} end)
     Process.register(pid, :memory_database)
+    Agent.update(:memory_database, fn db -> Map.put(db, :keywords, %{}) end)
   end
   
   def set_path(start_path) do
@@ -97,13 +96,23 @@ defmodule MemoryDatabase do
   end
 
   def add_keyword(keyword, file) do
-    IO.puts "  Adding keyword: " <> keyword
-    IO.puts "  To file: " <> file
-    #new_keywords = %{"kala" => ["/to/first/file", "/to/second/file"]}
-    #Agent.update(:memory_database, fn db -> Map.put(db, :keywords, new_keywords) end)
+    keywords = Agent.get(:memory_database, fn db -> Map.get(db, :keywords) end)
+    new_keywords = if Map.get(keywords, keyword) do
+      file_list = Map.get(keywords, keyword)
+      new_list = file_list ++ [file]
+      Map.put(keywords, keyword, new_list)
+    else
+      Map.put(keywords, keyword, [file])
+    end
+    Agent.update(:memory_database, fn db -> Map.put(db, :keywords, new_keywords) end)
+  end
+
+  def get_keywords() do
+    Agent.get(:memory_database, fn db -> Map.get(db, :keywords) end)
   end
   
 end
 
 JelleryGenerator.start
+IO.inspect MemoryDatabase.get_keywords
 
