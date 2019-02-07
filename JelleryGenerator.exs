@@ -38,6 +38,7 @@ defmodule JelleryGenerator do
 		  MemoryDatabase.start()
 		  MemoryDatabase.set_path(start_dir)
 			Processor.process_files([start_dir])
+			HTMLGenerator.create_html(HTMLGenerator.generate_tag_cloud)
 	end
 
 end
@@ -71,8 +72,10 @@ defmodule Keywords do
     to_keywords = String.trim_trailing(to_keywords, ".jpg")
     words = String.split(to_keywords, [" /", "  ", "/", " "])
     Enum.map words, fn word ->
-      if !String.match?(word, ~r/^\d{0,}$/) do
-        MemoryDatabase.add_keyword word, path_and_filename
+      if !String.match?(word, ~r/^_{0,}$/) do
+        keyword = String.replace(word, ~r/^\!{1}/, "")
+        keyword = String.replace(keyword, ~r/_/, " ")
+        MemoryDatabase.add_keyword keyword, path_and_filename
       end
       word
     end
@@ -97,7 +100,7 @@ defmodule MemoryDatabase do
 
   def add_keyword(keyword, file) do
     keywords = Agent.get(:memory_database, fn db -> Map.get(db, :keywords) end)
-    new_keywords = if Map.get(keywords, keyword) do
+    new_keywords = if Map.has_key?(keywords, keyword) do
       file_list = Map.get(keywords, keyword)
       new_list = file_list ++ [file]
       Map.put(keywords, keyword, new_list)
@@ -113,6 +116,23 @@ defmodule MemoryDatabase do
   
 end
 
+defmodule HTMLGenerator do
+  def generate_tag_cloud do
+    keys = MemoryDatabase.get_keywords
+    Enum.reduce(keys, "", fn({keyword, files}, acc) ->
+      size = Enum.count(files) + 11
+      acc <> "<a style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "
+    end)
+  end
+  def create_html(tags) do
+    content = File.read! "template/index.html"
+    {:ok, new_file} = File.open "test_index.html", [:write]
+    new_content = String.replace(content, "{tag_cloud}", tags)
+    IO.binwrite new_file, new_content
+    IO.puts "New HTML file created: test_index.html"
+  end
+end
+
+
 JelleryGenerator.start
-IO.inspect MemoryDatabase.get_keywords
 
