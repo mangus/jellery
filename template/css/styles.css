@@ -1,0 +1,33 @@
+
+html {
+  background-color: #2e291e;
+  text-decoration-color: white;
+}
+
+a {
+  color: white;
+  text-decoration: none;
+}
+a:hover {
+  color: #2e291e;
+  background-color: white;
+}
+
+.center {
+  text-align: center
+}
+.cloud {
+  width: 600px;
+  display: inline-block;
+  list-style: none;
+  text-align: center;
+}
+.cloud li {
+  display: inline-block;
+  padding: 5px;
+  vertical-align: bottom;
+}
+
+.aName {
+  text-decoration: underline;
+}

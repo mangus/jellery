@@ -121,15 +121,16 @@ defmodule HTMLGenerator do
     keys = MemoryDatabase.get_keywords
     Enum.reduce(keys, "", fn({keyword, files}, acc) ->
       size = Enum.count(files) + 11
-      acc <> "<a style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "
+      link = "<li style='font-size: " <> Integer.to_string(size) <> "px'><a href='#'>" <> keyword <> "</a></li>"
+      acc <> link
     end)
   end
   def create_html(tags) do
     content = File.read! "template/index.html"
-    {:ok, new_file} = File.open "test_index.html", [:write]
+    {:ok, new_file} = File.open "template/generated_index.html", [:write]
     new_content = String.replace(content, "{tag_cloud}", tags)
     IO.binwrite new_file, new_content
-    IO.puts "New HTML file created: test_index.html"
+    IO.puts "New HTML file created: template/generated_index.html"
   end
 end
 
