@@ -120,8 +120,8 @@ defmodule HTMLGenerator do
   def generate_tag_cloud do
     keys = MemoryDatabase.get_keywords
     Enum.reduce(keys, "", fn({keyword, files}, acc) ->
-      size = Enum.count(files) + 11
-      link = "<li style='font-size: " <> Integer.to_string(size) <> "px'><a href='#'>" <> keyword <> "</a></li>"
+      size = min(Enum.count(files) + 15, 77)
+      link = "<a href='#' style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "
       acc <> link
     end)
   end

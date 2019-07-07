@@ -7,6 +7,8 @@ html {
 a {
   color: white;
   text-decoration: none;
+  vertical-align: middle;
+  padding: 5px;
 }
 a:hover {
   color: #2e291e;
@@ -17,17 +19,12 @@ a:hover {
   text-align: center
 }
 .cloud {
-  width: 600px;
+  width: 70%;
   display: inline-block;
-  list-style: none;
-  text-align: center;
-}
-.cloud li {
-  display: inline-block;
-  padding: 5px;
-  vertical-align: bottom;
+  vertical-align: middle;
+  line-height: 34px;
+  text-align: justify;
+  text-justify: inter-word;
+  padding: 50px;
 }
 
-.aName {
-  text-decoration: underline;
-}
