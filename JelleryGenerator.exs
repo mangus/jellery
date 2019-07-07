@@ -61,7 +61,7 @@ defmodule Processor do
 	  		Keywords.get_keywords filename_with_relative_path
 	  		
 	  		copy_from = MemoryDatabase.get_path() <> filename_with_relative_path 
-	  		copy_to = "jellery/images/" <> calculate_filename(MemoryDatabase.get_path() <> first_file) <> ".jpg"
+	  		copy_to = "jellery/images/" <> calculate_filename(first_file) <> ".jpg"
 	  		File.copy! copy_from, copy_to
 	  	end
 		end
@@ -71,8 +71,8 @@ defmodule Processor do
 	def process_files([]) do
 	end
 
-  def calculate_filename(path_and_file) do
-    :crypto.hash(:sha256, path_and_file) |> Base.encode16 |> String.downcase
+  def calculate_filename(file_with_relative_path) do
+    String.slice(:crypto.hash(:sha256, MemoryDatabase.get_path() <> file_with_relative_path) |> Base.encode16 |> String.downcase, 0..22)
   end
 end
 
@@ -85,7 +85,7 @@ defmodule Keywords do
       if !String.match?(word, ~r/^_{0,}$/) do
         keyword = String.replace(word, ~r/^\!{1}/, "")
         keyword = String.replace(keyword, ~r/_/, " ")
-        MemoryDatabase.add_keyword keyword, path_and_filename
+        MemoryDatabase.add_keyword keyword, Processor.calculate_filename(path_and_filename)
       end
       word
     end
@@ -108,14 +108,14 @@ defmodule MemoryDatabase do
     Agent.get(:memory_database, fn db -> Map.get(db, :start_path) end)
   end
 
-  def add_keyword(keyword, file) do
+  def add_keyword(keyword, filehash) do
     keywords = Agent.get(:memory_database, fn db -> Map.get(db, :keywords) end)
     new_keywords = if Map.has_key?(keywords, keyword) do
       file_list = Map.get(keywords, keyword)
-      new_list = file_list ++ [file]
+      new_list = file_list ++ [filehash]
       Map.put(keywords, keyword, new_list)
     else
-      Map.put(keywords, keyword, [file])
+      Map.put(keywords, keyword, [filehash])
     end
     Agent.update(:memory_database, fn db -> Map.put(db, :keywords, new_keywords) end)
   end
@@ -144,7 +144,9 @@ defmodule HTMLGenerator do
     keys = MemoryDatabase.get_keywords
     Enum.reduce(keys, "", fn({keyword, files}, acc) ->
       size = min(Enum.count(files) + 15, 77)
-      link = "<a href='#' style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "
+      coma_seperated = List.foldr(files, "", fn x, acc -> "\"" <> x <> "\"," <> acc end)
+      coma_seperated = String.trim_trailing(coma_seperated, ",")
+      link = "<a onclick='showImages([" <> coma_seperated <> "])' href='#' style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "
       acc <> link
     end)
   end
