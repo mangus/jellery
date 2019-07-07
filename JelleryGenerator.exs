@@ -35,9 +35,12 @@ defmodule JelleryGenerator do
 	end
 	
 	def start_process(start_dir) do
+			HTMLGenerator.clean_up()
+      HTMLGenerator.create_folders()
 		  MemoryDatabase.start()
 		  MemoryDatabase.set_path(start_dir)
 			Processor.process_files([start_dir])
+      HTMLGenerator.copy_css_and_js()
 			HTMLGenerator.create_html(HTMLGenerator.generate_tag_cloud)
 	end
 
@@ -56,6 +59,10 @@ defmodule Processor do
         IO.puts "Processing file: " <> first_file
   			filename_with_relative_path = String.trim_leading(first_file, MemoryDatabase.get_path())
 	  		Keywords.get_keywords filename_with_relative_path
+	  		
+	  		copy_from = MemoryDatabase.get_path() <> filename_with_relative_path 
+	  		copy_to = "jellery/images/" <> calculate_filename(MemoryDatabase.get_path() <> first_file) <> ".jpg"
+	  		File.copy! copy_from, copy_to
 	  	end
 		end
 		process_files other_files
@@ -64,6 +71,9 @@ defmodule Processor do
 	def process_files([]) do
 	end
 
+  def calculate_filename(path_and_file) do
+    :crypto.hash(:sha256, path_and_file) |> Base.encode16 |> String.downcase
+  end
 end
 
 defmodule Keywords do
@@ -117,6 +127,19 @@ defmodule MemoryDatabase do
 end
 
 defmodule HTMLGenerator do
+  def clean_up() do
+    IO.puts "Cleaning up jellery dirctory..."
+    File.rm_rf! "jellery"
+  end
+  def create_folders() do
+    File.mkdir_p! "jellery/images/"
+    File.mkdir_p! "jellery/css/"
+    File.mkdir_p! "jellery/js/"
+  end
+  def copy_css_and_js() do
+    File.copy! "template/css/styles.css", "jellery/css/styles.css"
+    File.copy! "template/js/scripts.js", "jellery/js/scripts.js"
+  end
   def generate_tag_cloud do
     keys = MemoryDatabase.get_keywords
     Enum.reduce(keys, "", fn({keyword, files}, acc) ->
@@ -127,10 +150,10 @@ defmodule HTMLGenerator do
   end
   def create_html(tags) do
     content = File.read! "template/index.html"
-    {:ok, new_file} = File.open "template/generated_index.html", [:write]
+    {:ok, new_file} = File.open "jellery/index.html", [:write]
     new_content = String.replace(content, "{tag_cloud}", tags)
     IO.binwrite new_file, new_content
-    IO.puts "New HTML file created: template/generated_index.html"
+    IO.puts "New HTML file created: jellery/index.html"
   end
 end
 
