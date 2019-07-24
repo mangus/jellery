@@ -60,8 +60,8 @@ defmodule Processor do
   			filename_with_relative_path = String.trim_leading(first_file, MemoryDatabase.get_path())
 	  		Keywords.get_keywords filename_with_relative_path
 	  		
-	  		copy_from = MemoryDatabase.get_path() <> filename_with_relative_path 
-	  		copy_to = "jellery/images/" <> calculate_filename(first_file) <> ".jpg"
+	  		copy_from = first_file
+	  		copy_to = "jellery/images/" <> calculate_filename(filename_with_relative_path) <> ".jpg"
 	  		File.copy! copy_from, copy_to
 	  	end
 		end
@@ -143,7 +143,7 @@ defmodule HTMLGenerator do
   def generate_tag_cloud do
     keys = MemoryDatabase.get_keywords
     Enum.reduce(keys, "", fn({keyword, files}, acc) ->
-      size = min(Enum.count(files) + 15, 77)
+      size = min(Enum.count(files) * 2 + 14, 67)
       coma_seperated = List.foldr(files, "", fn x, acc -> "\"" <> x <> "\"," <> acc end)
       coma_seperated = String.trim_trailing(coma_seperated, ",")
       link = "<a onclick='showImages([" <> coma_seperated <> "])' href='#' style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "

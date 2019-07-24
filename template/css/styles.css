@@ -1,4 +1,5 @@
 
+html, body {margin: 0; height: 100%; overflow-x: hidden}
 html {
   background-color: #2e291e;
   text-decoration-color: white;
@@ -28,3 +29,43 @@ a:hover {
   padding: 50px;
 }
 
+#slides {
+}
+
+#picture-slides {
+  
+}
+
+.picture-container {
+  width: 100%;
+  height: 100%;
+  background: black;
+  position: absolute;
+  margin-left: 100%;
+  top: 0px;
+}
+
+.picture {
+  width: 100%;
+}
+
+@keyframes next-picture-in {
+  from {margin-left: 100%;}
+  to {margin-left: 0%;}
+}
+
+.slide-in {
+  margin-left: 0px;
+  animation-name: next-picture-in;
+  animation-duration: 1s;
+} 
+
+@keyframes current-picture-out {
+  from {margin-left: 0%;}
+  to {margin-left: -100%;}
+}
+
+.slide-out {
+  animation-name: current-picture-out;
+  animation-duration: 1s;
+}
