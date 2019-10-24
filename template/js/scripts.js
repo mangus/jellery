@@ -1,4 +1,16 @@
 
+document.onkeydown = function(evt) {
+  evt = evt || window.event;
+  if (evt.keyCode == 37) {
+    showPreviousSlide();
+  } else if (evt.keyCode == 39 || evt.keyCode == 32) {
+    showNextSlide();
+  }
+  if (evt.ctrlKey && evt.keyCode == 90) {
+    alert("Ctrl-Z");
+  }
+};
+
 function showImages(imageList) {
   clearSlides();
   generateImageElements(imageList);
@@ -6,7 +18,7 @@ function showImages(imageList) {
 }
 
 function generateImageElements(imageList) {
-  var container = document.createElement("span");
+  var container = document.createElement("span"); 
   container.setAttribute("id", "picture-slides");
   document.getElementById("slides").appendChild(container);
   
@@ -72,6 +84,7 @@ function preloadImage(url, callback) {
 }
 
 function showPreviousSlide() {
+  alert("showPreviousSlide()");
 }
 
 class Swipe {
