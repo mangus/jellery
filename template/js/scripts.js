@@ -22,15 +22,10 @@ function generateImageElements(imageList) {
   container.setAttribute("id", "picture-slides");
   document.getElementById("slides").appendChild(container);
   
-  var first = true;
   imageList.forEach(function(element) {
     var slide = document.createElement("div");
     slide.classList.add('picture-container');
-    slide.onclick = showNextSlide;
-    if (first) {
-      slide.classList.add('next-slide');
-      first = false;
-    }
+    slide.onclick = showOrHideControls;
     slide.innerHTML = "<img class='picture' src='images/" + element + ".jpg' />";
     document.getElementById("picture-slides").appendChild(slide);
     console.log(element);
@@ -43,32 +38,65 @@ function clearSlides() {
 }
 
 function showNextSlide() {
-  var changeNext = false;
-  var exitLoop = false;
+  done = false;
   document.getElementById("picture-slides").childNodes
-    .forEach(function (e) {
-      if (!exitLoop) {
-        if (changeNext) {
-          e.classList.add("next-slide");
-          preloadImage(e.firstChild.src);
-          exitLoop = true;
-        } else if (e.classList.contains("next-slide")) {
-        
+    .forEach(function (e, index) {
+      if (!done) {
+        e.classList.remove("slide-out-to-left");
+        e.classList.remove("slide-out-to-right");
+        if (e.classList.contains("current")) {
+          e.classList.remove("slide-in-from-right");
+          e.classList.remove("slide-in-from-left");
+          e.classList.remove("current");
+          e.classList.add("slide-out-to-left");
+          
+          next = document.getElementById("picture-slides").childNodes[index + 1];
+          next.classList.remove("slide-out-to-right");
+          next.classList.add("slide-in-from-right");
+          next.classList.add("current");
+          
+          preloadImage(document.getElementById("picture-slides").childNodes[index + 2].firstChild.src);
+          done = true;
+          
           // TODO+TEST
+          /*
           var swiper = new Swipe(e.firstChild);
           swiper.onLeft(function() { alert('swiped left.') });
           swiper.onRight(function() { alert('swiped right.') });
           swiper.onUp(function() { alert('swiped up.') });
           swiper.onDown(function() { alert('swiped down.') });
           swiper.run();
-          
-          e.classList.add("slide-in");
-          e.classList.remove("next-slide");
-          changeNext = true;
-        } else if (e.classList.contains("slide-in")) { // Current slide
-          e.classList.remove("slide-in");
-          e.classList.add("slide-out");
+          */
         }
+      }
+    });
+    
+    if (!done) {
+      takeFirst = document.getElementById("picture-slides").childNodes[0];
+      takeFirst.classList.add("slide-in-from-right");
+      takeFirst.classList.add("current");
+    }
+}
+
+function showPreviousSlide() {
+  document.getElementById("picture-slides").childNodes
+    .forEach(function (e, index) {
+      e.classList.remove("slide-out-to-left");
+      e.classList.remove("slide-out-to-right");
+      
+      if (e.classList.contains("current")) {
+        e.classList.remove("slide-in-from-right");
+        e.classList.remove("slide-in-from-left");
+        e.classList.remove("current");
+        
+        e.classList.add("slide-out-to-right");
+        
+        previous = document.getElementById("picture-slides").childNodes[index - 1];
+        previous.classList.remove("slide-out-to-left");
+        previous.classList.add("slide-in-from-left");
+        previous.classList.add("current");
+        
+        next = document.getElementById("picture-slides").childNodes[index + 1];
       }
     });
 }
@@ -83,8 +111,8 @@ function preloadImage(url, callback) {
   img.onload = callback;
 }
 
-function showPreviousSlide() {
-  alert("showPreviousSlide()");
+function showOrHideControls() {
+  alert("showOrHideControls()");
 }
 
 class Swipe {

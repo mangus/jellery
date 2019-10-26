@@ -56,19 +56,35 @@ a:hover {
   from {margin-left: 100%;}
   to {margin-left: 0%;}
 }
-
-.slide-in {
+.slide-in-from-right {
   margin-left: 0px;
   animation-name: next-picture-in;
-  animation-duration: 1s;
+  animation-duration: 0.7s;
 } 
-
-@keyframes current-picture-out {
+@keyframes current-picture-out-to-left {
   from {margin-left: 0%;}
   to {margin-left: -100%;}
 }
+.slide-out-to-left {
+  animation-name: current-picture-out-to-left;
+  animation-duration: 0.7s;
+}
 
-.slide-out {
-  animation-name: current-picture-out;
-  animation-duration: 1s;
+
+@keyframes previous-picture-back {
+  from {margin-left: -100%;}
+  to {margin-left: 0%;}
+}
+.slide-in-from-left {
+  margin-left: 0px;
+  animation-name: previous-picture-back;
+  animation-duration: 0.7s;
+} 
+@keyframes current-picture-out-to-right {
+  from {margin-left: 0%;}
+  to {margin-left: 100%;}
+}
+.slide-out-to-right {
+  animation-name: current-picture-out-to-right;
+  animation-duration: 0.7s;
 }
