@@ -48,6 +48,11 @@ end
 
 defmodule Processor do
 
+  # For XML parsing for UFRaw metadata files
+  import Record, only: [defrecord: 2, extract: 2]
+  defrecord :xmlElement,   extract(:xmlElement, from_lib: "xmerl/include/xmerl.hrl")
+  defrecord :xmlText,      extract(:xmlText, from_lib: "xmerl/include/xmerl.hrl")
+
 	def process_files([first_file | other_files]) do
 		if File.dir?(first_file) and !String.contains?(first_file, "crap") do
 			IO.puts "Processing directory: " <> first_file
@@ -58,7 +63,7 @@ defmodule Processor do
 			if String.ends_with?(first_file, [".jpg"]) do
         IO.puts "Processing file: " <> first_file
   			filename_with_relative_path = String.trim_leading(first_file, MemoryDatabase.get_path())
-	  		Keywords.get_keywords filename_with_relative_path
+	  		Keywords.get_keywords filename_with_relative_path, get_timestamp(first_file)
 	  		
 	  		copy_from = first_file
 	  		copy_to = "jellery/images/" <> calculate_filename(filename_with_relative_path) <> ".jpg"
@@ -74,10 +79,32 @@ defmodule Processor do
   def calculate_filename(file_with_relative_path) do
     String.slice(:crypto.hash(:sha256, MemoryDatabase.get_path() <> file_with_relative_path) |> Base.encode16 |> String.downcase, 0..22)
   end
+  
+  def get_ufraw_filename(path_and_filename) do
+    String.replace(path_and_filename, ".jpg", ".ufraw")
+  end
+  
+  def string_to_unix_timestamp(string) do
+    {timestamp, 0} = System.cmd("python3", ["./date_parser.py", string])
+    {as_integer, ""} = Integer.parse(timestamp)
+    as_integer
+  end
+  
+  def get_timestamp(path_and_filename) do
+    case get_ufraw_filename(path_and_filename) |> File.read() do
+      {:ok, xml}      ->
+        {doc, _ } = xml |> :binary.bin_to_list |> :xmerl_scan.string
+        [text] = :xmerl_xpath.string('/UFRaw/Timestamp/text()', doc)
+        string_to_unix_timestamp(to_string(xmlText(text, :value)))
+      {:error, _} ->
+        file_attributes = File.stat!(path_and_filename, [{:time, :posix}])
+        file_attributes.mtime
+    end
+  end
 end
 
 defmodule Keywords do
-  def get_keywords(path_and_filename) do
+  def get_keywords(path_and_filename, timestamp) do
     to_keywords = String.replace(path_and_filename, ~r/\(.{0,}\)/, "") # Remove text in brackets
     to_keywords = String.trim_trailing(to_keywords, ".jpg")
     words = String.split(to_keywords, [" /", "  ", "/", " "])
@@ -85,7 +112,7 @@ defmodule Keywords do
       if !String.match?(word, ~r/^_{0,}$/) do
         keyword = String.replace(word, ~r/^\!{1}/, "")
         keyword = String.replace(keyword, ~r/_/, " ")
-        MemoryDatabase.add_keyword keyword, Processor.calculate_filename(path_and_filename)
+        MemoryDatabase.add_keyword keyword, Processor.calculate_filename(path_and_filename), timestamp
       end
       word
     end
@@ -108,14 +135,15 @@ defmodule MemoryDatabase do
     Agent.get(:memory_database, fn db -> Map.get(db, :start_path) end)
   end
 
-  def add_keyword(keyword, filehash) do
+  def add_keyword(keyword, filehash, timestamp) do
     keywords = Agent.get(:memory_database, fn db -> Map.get(db, :keywords) end)
     new_keywords = if Map.has_key?(keywords, keyword) do
       file_list = Map.get(keywords, keyword)
-      new_list = file_list ++ [filehash]
+      new_list = file_list ++ [%{timestamp: timestamp, filehash: filehash}]
+      Enum.sort_by new_list, &Map.fetch(&1, :timestamp)
       Map.put(keywords, keyword, new_list)
     else
-      Map.put(keywords, keyword, [filehash])
+      Map.put(keywords, keyword, [%{timestamp: timestamp, filehash: filehash}])
     end
     Agent.update(:memory_database, fn db -> Map.put(db, :keywords, new_keywords) end)
   end
@@ -144,7 +172,7 @@ defmodule HTMLGenerator do
     keys = MemoryDatabase.get_keywords
     Enum.reduce(keys, "", fn({keyword, files}, acc) ->
       size = min(Enum.count(files) * 2 + 14, 67)
-      coma_seperated = List.foldr(files, "", fn x, acc -> "\"" <> x <> "\"," <> acc end)
+      coma_seperated = List.foldr(files, "", fn x, acc -> "\"" <> x.filehash <> "\"," <> acc end)
       coma_seperated = String.trim_trailing(coma_seperated, ",")
       link = "<a onclick='showImages([" <> coma_seperated <> "])' href='#' style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "
       acc <> link
