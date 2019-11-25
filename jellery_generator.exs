@@ -97,7 +97,8 @@ defmodule Processor do
         [text] = :xmerl_xpath.string('/UFRaw/Timestamp/text()', doc)
         string_to_unix_timestamp(to_string(xmlText(text, :value)))
       {:error, _} ->
-        file_attributes = File.stat!(path_and_filename, [{:time, :posix}])
+        raw_filename = String.replace(path_and_filename, ".jpg", ".DNG")
+        file_attributes = File.stat!(raw_filename, [{:time, :posix}])
         file_attributes.mtime
     end
   end
@@ -140,7 +141,7 @@ defmodule MemoryDatabase do
     new_keywords = if Map.has_key?(keywords, keyword) do
       file_list = Map.get(keywords, keyword)
       new_list = file_list ++ [%{timestamp: timestamp, filehash: filehash}]
-      Enum.sort_by new_list, &Map.fetch(&1, :timestamp)
+      new_list = Enum.reverse(Enum.sort_by new_list, &Map.fetch(&1, :timestamp))
       Map.put(keywords, keyword, new_list)
     else
       Map.put(keywords, keyword, [%{timestamp: timestamp, filehash: filehash}])
