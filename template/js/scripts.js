@@ -70,12 +70,12 @@ function showNextSlide() {
         }
       }
     });
-    
-    if (!done) {
-      takeFirst = document.getElementById("picture-slides").childNodes[0];
-      takeFirst.classList.add("slide-in-from-right");
-      takeFirst.classList.add("current");
-    }
+  
+  if (!done) {
+    takeFirst = document.getElementById("picture-slides").childNodes[0];
+    takeFirst.classList.add("slide-in-from-right");
+    takeFirst.classList.add("current");
+  }
 }
 
 function showPreviousSlide() {
@@ -112,7 +112,7 @@ function preloadImage(url, callback) {
 }
 
 function showOrHideControls() {
-  alert("showOrHideControls()");
+  console.log("showOrHideControls()");
 }
 
 class Swipe {

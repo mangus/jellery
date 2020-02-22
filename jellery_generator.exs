@@ -92,7 +92,7 @@ defmodule Processor do
   
   def get_timestamp(path_and_filename) do
     case get_ufraw_filename(path_and_filename) |> File.read() do
-      {:ok, xml}      ->
+      {:ok, xml} ->
         {doc, _ } = xml |> :binary.bin_to_list |> :xmerl_scan.string
         [text] = :xmerl_xpath.string('/UFRaw/Timestamp/text()', doc)
         string_to_unix_timestamp(to_string(xmlText(text, :value)))
@@ -109,6 +109,7 @@ defmodule Keywords do
     to_keywords = String.replace(path_and_filename, ~r/\(.{0,}\)/, "") # Remove text in brackets
     to_keywords = String.trim_trailing(to_keywords, ".jpg")
     words = String.split(to_keywords, [" /", "  ", "/", " "])
+    MemoryDatabase.add_keyword "*", Processor.calculate_filename(path_and_filename), timestamp
     Enum.map words, fn word ->
       if !String.match?(word, ~r/^_{0,}$/) do
         keyword = String.replace(word, ~r/^\!{1}/, "")
@@ -172,7 +173,10 @@ defmodule HTMLGenerator do
   def generate_tag_cloud do
     keys = MemoryDatabase.get_keywords
     Enum.reduce(keys, "", fn({keyword, files}, acc) ->
-      size = min(Enum.count(files) * 2 + 14, 67)
+      size = case keyword do
+        "*" -> 16
+         _  -> min(Enum.count(files) * 2 + 14, 67)
+      end
       coma_seperated = List.foldr(files, "", fn x, acc -> "\"" <> x.filehash <> "\"," <> acc end)
       coma_seperated = String.trim_trailing(coma_seperated, ",")
       link = "<a onclick='showImages([" <> coma_seperated <> "])' href='#' style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "
