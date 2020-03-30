@@ -5,34 +5,34 @@ defmodule JelleryGenerator do
     JelleryGenerator.check_arguments
   end
 
-	def check_arguments do
-		case length(System.argv) do
-			0 ->
-				IO.puts "Please specify start directory as first command line argument"
-			1 ->
-				[start_dir | _] = System.argv
-				if File.exists?(start_dir) do
-					welcome start_dir
-				else
-					IO.puts "The path does not exist: " <> start_dir
-				end
-			_ ->
-				IO.puts "Only one argument, please."
-		end
-	end
+  def check_arguments do
+	  case length(System.argv) do
+		  0 ->
+			  IO.puts "Please specify start directory as first command line argument"
+		  1 ->
+			  [start_dir | _] = System.argv
+			  if File.exists?(start_dir) do
+				  welcome start_dir
+			  else
+				  IO.puts "The path does not exist: " <> start_dir
+			  end
+		  _ ->
+			  IO.puts "Only one argument, please."
+	  end
+  end
 
-	def welcome(start_dir) do
-		IO.puts "\nThis fancy gallery generator is going to find image files"
-			<> "\nfrom directory specified as first command line argument:"
-		IO.puts "    " <> start_dir
-		IO.puts "and create complete HTML image gallery into current working directory:"
-		{:ok, current_dir} = File.cwd
-		IO.puts "    " <> current_dir <> "/jellery\n"
-		lets_go = IO.gets "If that's what You want to do, smash ENTER to continue\n"
-		if lets_go == "\n" do
-		  start_process(start_dir)
-		end
-	end
+  def welcome(start_dir) do
+	  IO.puts "\nThis fancy gallery generator is going to find image files"
+		  <> "\nfrom directory specified as first command line argument:"
+	  IO.puts "    " <> start_dir
+	  IO.puts "and create complete HTML image gallery into current working directory:"
+	  {:ok, current_dir} = File.cwd
+	  IO.puts "    " <> current_dir <> "/jellery\n"
+	  lets_go = IO.gets "If that's what You want to do, smash ENTER to continue\n"
+	  if lets_go == "\n" do
+	    start_process(start_dir)
+	  end
+  end
 	
 	def start_process(start_dir) do
 			HTMLGenerator.clean_up()
