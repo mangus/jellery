@@ -142,7 +142,8 @@ defmodule MemoryDatabase do
     new_keywords = if Map.has_key?(keywords, keyword) do
       file_list = Map.get(keywords, keyword)
       new_list = file_list ++ [%{timestamp: timestamp, filehash: filehash}]
-      new_list = Enum.reverse(Enum.sort_by new_list, &Map.fetch(&1, :timestamp))
+      new_list = Enum.sort_by new_list, &Map.fetch(&1, :timestamp)
+      # new_list = Enum.reverse(Enum.sort_by new_list, &Map.fetch(&1, :timestamp))
       Map.put(keywords, keyword, new_list)
     else
       Map.put(keywords, keyword, [%{timestamp: timestamp, filehash: filehash}])
@@ -179,7 +180,7 @@ defmodule HTMLGenerator do
       end
       coma_seperated = List.foldr(files, "", fn x, acc -> "\"" <> x.filehash <> "\"," <> acc end)
       coma_seperated = String.trim_trailing(coma_seperated, ",")
-      link = "<a onclick='showImages([" <> coma_seperated <> "])' href='#' style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "
+      link = "<a onclick='new PictureRoller([" <> coma_seperated <> "])' href='#' style='font-size: " <> Integer.to_string(size) <> "px'>" <> keyword <> "</a> "
       acc <> link
     end)
   end
