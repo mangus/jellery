@@ -9,6 +9,7 @@ class PictureRoller {
     this.createNeededImageElements();
     this.bindKeyboard();
     this.showFirst();
+    this.homeScreen = true;
   }
   
   bindKeyboard() {
@@ -39,7 +40,6 @@ class PictureRoller {
     loadThese.push(this.currentIndex);
     if (this.currentIndex < (this.imageList.length - 1))
       loadThese.push(this.currentIndex + 1);
-    console.log(loadThese);
     return loadThese;
   }
   
@@ -52,7 +52,6 @@ class PictureRoller {
     let roller = this;
     loadThese.forEach(imageIndex => {
       if (!roller.elementExists(imageIndex)) {
-        console.log("loading", imageIndex);
         var slide = document.createElement("div");
         slide.classList.add('picture-container');
         slide.onclick = roller.showOrHideControls;
@@ -74,8 +73,9 @@ class PictureRoller {
   
   showNext() {
     if (this.currentIndex == this.imageList.length - 1) {
-      this.render("forward");
+      this.render("home");
     } else {
+      this.homeScreen = false;
       this.currentIndex++;
       this.createNeededImageElements();
       this.render("forward");
@@ -83,8 +83,9 @@ class PictureRoller {
   }
   showPrevious() {
     if (this.currentIndex == 0) {
-      this.render("back");
+      this.render("back-home");
     } else {
+      this.homeScreen = false;
       this.currentIndex--;
       this.createNeededImageElements();
       this.render("back");
@@ -98,7 +99,8 @@ class PictureRoller {
     
     switch (direction) {
     
-      case "first":        
+      case "home":
+        homeScreen = true;
       case "forward":
         {    
           let done = false;
@@ -113,14 +115,13 @@ class PictureRoller {
                   e.classList.remove("current");
                   e.classList.add("slide-out-to-left");
                   
-                  let next = pictureNodes[index + 1];
-                  next.classList.remove("slide-out-to-right");
-                  next.classList.add("slide-in-from-right");
-                  next.classList.add("current");
-                  
-                  //preloadImage(pictureNodes[index + 2].firstChild.src); // this does not work well...
-                  done = true;                
-
+                  if (!this.homeScreen) {
+                    let next = pictureNodes[index + 1];
+                    next.classList.remove("slide-out-to-right");
+                    next.classList.add("slide-in-from-right");
+                    next.classList.add("current");
+                  }
+                  done = true;
                 }
               }
             });
@@ -131,7 +132,9 @@ class PictureRoller {
           }
         }
         break;
-        
+      
+      case "back-home":
+        homeScreen = true;
       case "back":
         {
           pictureNodes
@@ -171,8 +174,6 @@ class PictureRoller {
   }
 
 }
-
-
 
 function clearSlides() {
   var elem = document.getElementById('picture-slides');
